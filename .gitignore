@@ -1,0 +1,17 @@
+# .gitignore
+
+# Environment files
+.env
+
+# Virtual environment directory
+/venv/
+
+# Bytecode files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Audio files (e.g., generated mp3s)
+*.mp3
+
+
