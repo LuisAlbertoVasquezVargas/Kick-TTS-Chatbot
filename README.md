@@ -10,7 +10,7 @@ This project listens for Kick chat events, converts messages to speech using AWS
 ## Prerequisites
 
 - **Windows 11**
-- **Python 3.11** (or the latest stable release)  
+- **Python 3.11**
   *Ensure Python is installed and added to your PATH.*
 - An AWS account with valid credentials for Polly
 - **Visual C++ Build Tools** (required for building certain packages)
@@ -58,7 +58,7 @@ copy .env.template .env
 
 Open `.env` in your favorite text editor and set your AWS credentials, default region, and chatroom ID. Your `.env` template should look like:
 
-```
+```ini
 # AWS stuff
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
