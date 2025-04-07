@@ -84,17 +84,18 @@ The application will:
 - Print the initial TTS state.
 - Connect to Kick’s chat event stream via websockets.
 - Listen for incoming messages.
-- When a message starts with `!m `, it extracts the message and converts it to speech using AWS Polly.  
-  The output is formatted as:
-  ```
-  {sender} dice {message}
-  ```
-  The default voice used is "Mia."
+- When a message starts with an exclamation mark (`!`), it extracts the first word as the voice identifier and the remainder as the message.
+- If the provided voice is `"m"`, the default voice `"Mia"` is used.
+- It then converts the message to speech (formatted as `{sender} dice {message}`) using AWS Polly and plays the audio.
 
 ### 7. Usage
 
 - **Chat Command Format:**  
-  In Kick chat, send a message starting with `!m ` followed by your message. For example:
+  In Kick chat, send a message in the following unified format:
+  ```
+  !{voice_id} {message}
+  ```
+  For example, to use the default voice, you can send:
   ```
   !m Hola, ¿cómo estás?
   ```
@@ -102,6 +103,7 @@ The application will:
   ```
   luxinv dice Hola, ¿cómo estás?
   ```
+  If you provide another voice identifier (for example, `!Pedro Buenas tardes`), the system will use that voice (after formatting it) for speech synthesis.
 
 - **Toggle TTS:**  
   In the terminal where the app is running, type any command containing “on” or “off” to enable or disable TTS.
@@ -120,3 +122,4 @@ The application will:
 ## License
 
 This project is provided as-is with no warranty. Use at your own risk.
+
