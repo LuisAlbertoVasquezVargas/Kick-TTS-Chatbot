@@ -1,5 +1,3 @@
-# app.py
-
 import os
 import tempfile
 
@@ -74,7 +72,10 @@ async def kick_listener(chatroom_id):
     ws_url = "wss://ws-us2.pusher.com/app/32cbd69e4b950bf97679?protocol=7&client=js&version=8.2.0&flash=false"
     try:
         async with websockets.connect(ws_url) as websocket:
-            subscribe_msg = {"event": "pusher:subscribe", "data": {"auth": "", "channel": f"chatrooms.{chatroom_id}.v2"}}
+            subscribe_msg = {
+                "event": "pusher:subscribe", 
+                "data": {"auth": "", "channel": f"chatrooms.{chatroom_id}.v2"}
+            }
             await websocket.send(json.dumps(subscribe_msg))
             while True:
                 message = await websocket.recv()
@@ -83,20 +84,25 @@ async def kick_listener(chatroom_id):
                     if data.get("event") == "App\\Events\\ChatMessageEvent":
                         payload = json.loads(data.get("data", "{}"))
                         msg = payload.get("content", "")
-                        username = payload.get("sender", {}).get("username", "Desconocido")
+                        username = payload.get("sender", {}).get("username", "???")
                         print(f"[CHAT] {'TTS_ENABLED' if tts_enabled else 'TTS_DISABLED'} {username}: {msg}")
-                        if tts_enabled and msg.startswith("!m "):
-                            content = msg[3:].strip()
+                        if tts_enabled and msg.startswith("!"):
+                            # Remove the leading "!" and split the message
+                            content = msg[1:].strip()
                             parts = content.split(maxsplit=1)
-                            if parts and parts[0].startswith("!"):
-                                voice = parts[0][1:]
-                                voice = voice.lower().capitalize()
-                                message_text = parts[1] if len(parts) > 1 else ""
+                            if len(parts) == 2:
+                                voice = parts[0]
+                                message_text = parts[1]
                             else:
+                                voice = parts[0]
+                                message_text = ""
+                            # Default voice: if voice is "m", use "Mia"
+                            if voice.lower() == "m":
                                 voice = "Mia"
-                                message_text = content
+                            else:
+                                voice = voice.lower().capitalize()
                             print(f"Voice = {voice}")
-                            # Now pass "sender dice message" to TTS
+                            # Construct TTS text as "{sender} dice {message}"
                             tts_text = f"{username} dice {message_text}"
                             threading.Thread(target=play_tts, args=(tts_text, voice), daemon=True).start()
                 except Exception as e_parse:
