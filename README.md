@@ -123,3 +123,4 @@ The application will:
 
 This project is provided as-is with no warranty. Use at your own risk.
 
+# TODO(luisvasquez): To implement a delay between consecutive chats (3 - 5 sec)
