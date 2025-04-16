@@ -129,5 +129,3 @@ This project is provided as-is with no warranty. Use at your own risk.
 .\venv\Scripts\Activate.ps1
 python -m src.main
 ```
-
-### TODO(luisvasquez): To implement a delay between consecutive chats (3 - 5 sec)
