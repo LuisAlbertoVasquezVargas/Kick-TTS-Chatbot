@@ -28,23 +28,17 @@ def main():
     setup_temp_dir()
     args = parse_args()
 
-    # CLI commands listener    
     logger = setup_logger(level=getattr(__import__('logging'), args.log_level.upper(), __import__('logging').INFO))
-    command_listener = CommandListener(logger, initial_state=(args.set == 'on'))
-    
-    # Kick's chat listener
-    tts_service = TTSService(aws_region=Config.AWS_REGION, logger=logger)
-    chat_listener = ChatListener(
-        ws_url=Config.WS_URL,
-        chatroom_id=Config.CHATROOM_ID,
-        tts_service=tts_service,
-        logger=logger,
-        tts_enabled_callable=command_listener.is_tts_enabled
-    )
-    
+
+    state = {"tts_enabled": args.set == 'on'}
+
+    command_listener = CommandListener(logger, state)
+    tts_service = TTSService(aws_region=Config.AWS_REGION, logger=logger, state=state)
+    chat_listener = ChatListener(ws_url=Config.WS_URL, chatroom_id=Config.CHATROOM_ID, tts_service=tts_service, logger=logger, state=state)
+
     threading.Thread(target=command_listener.listen, daemon=True).start()
     threading.Thread(target=lambda: asyncio.run(chat_listener.listen()), daemon=True).start()
-    
+
     while True:
         time.sleep(1)
 

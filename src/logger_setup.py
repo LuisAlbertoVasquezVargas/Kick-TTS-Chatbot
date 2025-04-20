@@ -16,15 +16,10 @@ class ColoredFormatter(logging.Formatter):
     def format(self, record):
         color = self.COLORS.get(record.levelno, '')
         level_tag = f"{color}[{record.levelname}]{colorama.Style.RESET_ALL}"
-        
-        tts_tag = ""
-        if hasattr(record, 'tts_state'):
-            tts_tag = f" {color}[tts={record.tts_state}]{colorama.Style.RESET_ALL}"
-        
-        channel_tag = ""
-        if hasattr(record, 'channel'):
-            channel_tag = f" {color}[{record.channel}]{colorama.Style.RESET_ALL}"
-        
+
+        tts_tag = f" {color}[tts={record.tts_state}]{colorama.Style.RESET_ALL}" if hasattr(record, 'tts_state') else ""
+        channel_tag = f" {color}[{record.channel}]{colorama.Style.RESET_ALL}" if hasattr(record, 'channel') else ""
+
         message = record.getMessage()
         return f"{level_tag}{tts_tag}{channel_tag} {message}"
 

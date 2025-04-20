@@ -5,22 +5,18 @@ import threading
 import websockets
 
 class ChatListener:
-    def __init__(self, ws_url, chatroom_id, tts_service, logger, tts_enabled_callable):
+    def __init__(self, ws_url, chatroom_id, tts_service, logger, state):
         self.ws_url = ws_url
         self.chatroom_id = chatroom_id
         self.tts_service = tts_service
         self.logger = logger
-        self.tts_enabled = tts_enabled_callable
+        self.state = state
 
     @staticmethod
     def parse_message(raw_msg):
         content = raw_msg[1:].strip()
         parts = content.split(maxsplit=1)
-        if len(parts) == 2:
-            voice, message_text = parts
-        else:
-            voice = parts[0]
-            message_text = ""
+        voice, message_text = (parts[0], parts[1]) if len(parts) == 2 else (parts[0], "")
         voice = "Mia" if voice.lower() == "m" else voice.lower().capitalize()
         return voice, message_text
 
@@ -33,6 +29,7 @@ class ChatListener:
             async with websockets.connect(self.ws_url) as websocket:
                 subscribe_msg = {"event": "pusher:subscribe", "data": {"auth": "", "channel": f"chatrooms.{self.chatroom_id}.v2"}}
                 await websocket.send(json.dumps(subscribe_msg))
+
                 while True:
                     message = await websocket.recv()
                     try:
@@ -41,22 +38,18 @@ class ChatListener:
                             payload = json.loads(data.get("data", "{}"))
                             msg = payload.get("content", "")
                             sender = payload.get("sender", {}).get("username", "???")
-                            # Determine TTS state as a string: "on" or "off"
-                            status = "on" if self.tts_enabled() else "off"
 
-                            # Use extra to pass tts_state and channel instead of including them manually.
-                            if status:
-                                self.logger.info("%s: %s", sender, msg, extra={"tts_state": status, "channel": "CHAT"})
+                            if self.state["tts_enabled"]:
+                                self.logger.info(f"{sender}: {msg}", extra={"tts_state": "on", "channel": "CHAT"})
                             else:
-                                self.logger.warning("%s: %s", sender, msg, extra={"tts_state": status, "channel": "CHAT"})
+                                self.logger.warning(f"{sender}: {msg}", extra={"tts_state": "off", "channel": "CHAT"})
 
-                            # If TTS is enabled and message starts with "!" then do TTS:
-                            if self.tts_enabled() and msg.startswith("!"):
+                            if self.state["tts_enabled"] and msg.startswith("!"):
                                 voice, message_text = self.parse_message(msg)
-                                self.logger.info("Voice = %s", voice, extra={"tts_state": "on", "channel": "CLI"})
+                                self.logger.info(f"Voice = {voice}", extra={"tts_state": "on", "channel": "CLI"})
                                 tts_text = self.format_tts_text(sender, message_text)
                                 threading.Thread(target=self.tts_service.play_tts, args=(tts_text, voice), daemon=True).start()
                     except Exception as e_parse:
-                        self.logger.error("Failed to parse message: %s", e_parse, extra={"channel": "CHAT"})
+                        self.logger.error(f"Failed to parse message: {e_parse}", extra={"channel": "CHAT"})
         except Exception as e_ws:
-            self.logger.error("WebSocket connection failed: %s", e_ws, extra={"channel": "CHAT"})
+            self.logger.error(f"WebSocket connection failed: {e_ws}", extra={"channel": "CHAT"})
